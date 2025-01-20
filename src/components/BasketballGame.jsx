@@ -115,6 +115,7 @@ const BasketballGame = () => {
               y: v.y * 0.98
             }));
             setRotationSpeed(rs => -rs * BOUNCE_DAMPING);
+            return newPos;  // Return immediately after wall collision to prevent scoring
           }
 
           // Backboard collision with improved physics
@@ -123,15 +124,16 @@ const BasketballGame = () => {
             const impactForce = Math.abs(currentVelocity.x);
             if (impactForce > 8) {
               setCurrentVelocity(v => ({
-                x: -v.x * BOUNCE_DAMPING * 1.3,  // Increased bounce for hard hits
+                x: -v.x * BOUNCE_DAMPING * 1.3,
                 y: v.y * 0.95 - 2
               }));
             } else {
               setCurrentVelocity(v => ({
-                x: -v.x * BOUNCE_DAMPING * 1.1,  // Increased bounce for soft hits
+                x: -v.x * BOUNCE_DAMPING * 1.1,
                 y: v.y * 0.95
               }));
             }
+            return newPos;  // Return immediately after backboard collision
           }
 
           // Super simplified scoring detection - just check if ball passes through rim plane
@@ -141,8 +143,10 @@ const BasketballGame = () => {
 
           // Score if ball passes through rim area and hasn't scored on this shot yet
           if (!scored && 
-              pos.x <= RIM_BACK && newPos.x >= RIM_FRONT && 
-              Math.abs(newPos.y - RIM_Y) < 25) {  // Generous vertical range
+              pos.x < RIM_FRONT &&  // Ball was previously before the rim
+              newPos.x >= RIM_FRONT && 
+              newPos.x < RIM_BACK &&  // Add check to ensure ball isn't past back of rim
+              Math.abs(newPos.y - RIM_Y) < 25) {
             setScore(s => s + POINTS_PER_BASKET);
             setScored(true);
           }
