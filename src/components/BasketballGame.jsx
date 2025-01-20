@@ -252,17 +252,17 @@ const BasketballGame = () => {
           <div className="relative">
             {/* Backboard */}
             <div className="absolute h-24 w-1 bg-white" 
-                 style={{ left: '48px', top: '-60px' }} />
+                 style={{ left: '48px', top: '-90px' }} />
             
             {/* Rim */}
             <div className="absolute w-12 h-1 bg-red-500" />
             
             {/* Post */}
-            <div className="absolute w-0.5 h-40 bg-white left-8" />
+            <div className="absolute w-1 h-40 bg-yellow-500 left-12" />
             
             {/* Wastebasket */}
             <div className="absolute text-4xl transform scale-150" 
-                 style={{ left: '0px', top: '-8px' }}>
+                 style={{ left: '0px', top: '0px' }}>
               🗑️
             </div>
           </div>
