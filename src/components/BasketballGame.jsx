@@ -45,19 +45,10 @@ const BasketballGame = () => {
     const handleKeyDown = (e) => {
       if (e.code === 'Space') {
         e.preventDefault();
-        if (isMoving) {
-          setBallPos({ x: 100, y: 350 });
-          setIsMoving(false);
-          setTime(0);
-          setCurrentVelocity({ x: 0, y: 0 });
-          scoredRef.current = false;  // Reset scoring ref instead of state
-          setRotation(0);
-          setRotationSpeed(0);
-          setShotLabel('');
-          setHitBackboard(false);
-          setHitRim(false);
+        // Only allow starting a new shot if ball isn't moving
+        if (!isMoving) {
+          setHolding(true);
         }
-        setHolding(true);
       }
     };
 
@@ -72,7 +63,7 @@ const BasketballGame = () => {
         setHolding(false);
         setIsMoving(true);
         setTime(0);
-        attemptInProgressRef.current = true;  // Mark shot as in progress
+        attemptInProgressRef.current = true;
       }
     };
 
