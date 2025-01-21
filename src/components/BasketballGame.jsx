@@ -12,42 +12,65 @@ const BasketballGame = () => {
   const [rotationSpeed, setRotationSpeed] = useState(0);
   const scoredRef = useRef(false);  // Using ref instead of state for immediate updates
   const [shotLabel, setShotLabel] = useState('');
-  const [hitBackboard, setHitBackboard] = useState(false);
+  const hitBackboardRef = useRef(false);  // Changed from state to ref
   const [hitRim, setHitRim] = useState(false);
   const [makes, setMakes] = useState(0);
   const [attempts, setAttempts] = useState(0);
   const attemptInProgressRef = useRef(false);  // Track if shot is in progress
+  const containerRef = useRef(null);  // Add ref for container
 
   // Game constants
-  const PERFECT_VELOCITY_X = 12;
-  const PERFECT_VELOCITY_Y = -18;
+  const PERFECT_VELOCITY_X = 12;  // Increased from 12 for more horizontal distance
+  const PERFECT_VELOCITY_Y = -21;  // Increased from -18 for higher arc
   const GRAVITY = 0.4;
-  const POWER_RATE = 2.0;
+  const POWER_RATE = 1.9;
   const POINTS_PER_BASKET = 3;
   const BOUNCE_DAMPING = 0.89;    // Increased from 0.85 for more bounce
   const GROUND_FRICTION = 0.98;   // Increased from 0.95 for smoother rolling
-  const MIN_SPEED = 0.1;
+  const MIN_SPEED = 0.2;
   const RESET_DELAY = 1500;
   const INITIAL_ROTATION_SPEED = 15;
-
-  // Rim dimensions and center
-  const RIM_FRONT = 550;
-  const RIM_BACK = 598;
-  const RIM_Y = 180;
-  const RIM_CENTER_X = (RIM_FRONT + RIM_BACK) / 2;
   const BALL_RADIUS = 15;
   const RIM_WIDTH = 48;
-  const SCORING_X = 620;  // New constant based on where scoring actually occurs
-  const ALLOWED_OFFSET = 15;  // Adjusted scoring window
+  const RIM_Y = 180;
+  const RIM_OFFSET = 50;  // Distance from right edge
+  const ALLOWED_OFFSET = 15;
 
-  // Handle spacebar
+  // Handle touch/click events
+  const handleTouchStart = (e) => {
+    e.preventDefault();
+    if (!isMoving && !holding) {
+      setHolding(true);
+      setPower(0);  // Reset power when starting to hold
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    e.preventDefault();
+    if (holding) {
+      const powerFactor = power / 100;
+      setCurrentVelocity({
+        x: PERFECT_VELOCITY_X * powerFactor,
+        y: PERFECT_VELOCITY_Y * powerFactor
+      });
+      setRotationSpeed(INITIAL_ROTATION_SPEED);  // Add initial rotation
+      setHolding(false);
+      setIsMoving(true);
+      setTime(0);
+      attemptInProgressRef.current = true;
+      hitBackboardRef.current = false;  // Reset hitBackboard at start of shot
+      setHitRim(false);  // Reset hitRim at start of shot
+    }
+  };
+
+  // Combined keyboard and touch controls
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.code === 'Space') {
         e.preventDefault();
-        // Only allow starting a new shot if ball isn't moving
-        if (!isMoving) {
+        if (!isMoving && !holding) {
           setHolding(true);
+          setPower(0);  // Reset power when starting to hold
         }
       }
     };
@@ -60,10 +83,13 @@ const BasketballGame = () => {
           x: PERFECT_VELOCITY_X * powerFactor,
           y: PERFECT_VELOCITY_Y * powerFactor
         });
+        setRotationSpeed(INITIAL_ROTATION_SPEED);  // Add initial rotation
         setHolding(false);
         setIsMoving(true);
         setTime(0);
         attemptInProgressRef.current = true;
+        hitBackboardRef.current = false;  // Reset hitBackboard at start of shot
+        setHitRim(false);  // Reset hitRim at start of shot
       }
     };
 
@@ -104,10 +130,17 @@ const BasketballGame = () => {
           // Update makes and attempts together at end of shot
           if (scoredRef.current) {
             setMakes(m => m + 1);
+          } else {
+            // Show MISS! if the shot didn't score
+            setShotLabel('MISS!');
+            setTimeout(() => {
+              setShotLabel('');
+            }, 1000);
           }
           setAttempts(a => a + 1);
           attemptInProgressRef.current = false;
           scoredRef.current = false;
+          hitBackboardRef.current = false;
         }
       }, RESET_DELAY);
     }
@@ -119,7 +152,8 @@ const BasketballGame = () => {
     let frameId;
     
     const updatePosition = () => {
-      if (isMoving) {
+      if (isMoving && containerRef.current) {
+        const containerWidth = containerRef.current.clientWidth;
         setTime(t => t + 1);
         setRotation(r => r + rotationSpeed);
         setBallPos(pos => {
@@ -128,56 +162,50 @@ const BasketballGame = () => {
             y: pos.y + currentVelocity.y + (GRAVITY * time)
           };
 
-          // Ground collision - show MISS if we hit ground without scoring
+          // Calculate rim positions based on container width
+          const RIM_BACK = containerWidth - RIM_OFFSET;
+          const RIM_FRONT = RIM_BACK - RIM_WIDTH;
+          const SCORING_X = RIM_FRONT + (RIM_WIDTH * 0.6);  // Adjusted to match visual rim position
+
+          // Ground collision with bounce
           if (newPos.y > 350) {
             newPos.y = 350;
-            if (!scoredRef.current) {
-              setShotLabel('MISS!');
-              setTimeout(() => {
-                setShotLabel('');
-              }, 1000);
-            }
-            setCurrentVelocity(v => ({
-              x: v.x * GROUND_FRICTION,
-              y: -v.y * BOUNCE_DAMPING
-            }));
-            setRotationSpeed(rs => rs * GROUND_FRICTION);
-            setTime(0);
-          }
-
-          // Wall collisions - both right and left walls
-          if (newPos.x > 620) {  // Right wall
-            newPos.x = 620;
-            setCurrentVelocity(v => ({
-              x: -v.x * BOUNCE_DAMPING, 
-              y: v.y * BOUNCE_DAMPING 
-            }));
-            setRotationSpeed(rs => -rs * BOUNCE_DAMPING);
-          } else if (newPos.x < 30) {  // Left wall
-            newPos.x = 30;
-            setCurrentVelocity(v => ({
-              x: -v.x * BOUNCE_DAMPING, 
-              y: v.y * BOUNCE_DAMPING 
-            }));
-            setRotationSpeed(rs => -rs * BOUNCE_DAMPING);
-          }
-
-          // Backboard collision with improved physics
-          if (newPos.x > 630 && pos.y > 160 && pos.y < 240) {
-            newPos.x = 628;
-            const impactForce = Math.abs(currentVelocity.x);
-            if (impactForce > 8) {
-              setCurrentVelocity(v => ({
-                x: -v.x * BOUNCE_DAMPING * 0.9,
-                y: v.y * 0.95 - 2
-              }));
+            const speed = Math.sqrt(currentVelocity.x * currentVelocity.x + currentVelocity.y * currentVelocity.y);
+            
+            if (speed < MIN_SPEED) {
+              setCurrentVelocity({ x: 0, y: 0 });
             } else {
               setCurrentVelocity(v => ({
-                x: -v.x * BOUNCE_DAMPING * 0.8,
-                y: v.y * 0.95
+                x: v.x * GROUND_FRICTION,
+                y: -v.y * BOUNCE_DAMPING
               }));
+              setRotationSpeed(rs => rs * GROUND_FRICTION);
             }
-            setHitBackboard(true);
+          }
+
+          // Wall collisions
+          if (newPos.x > containerWidth - 30) {
+            newPos.x = containerWidth - 30;
+            const impactForce = Math.abs(currentVelocity.x);
+            const reverseSpeed = Math.max(8, impactForce * 0.8);  // Ensure minimum reverse speed
+            setCurrentVelocity(v => ({
+              x: -reverseSpeed,  // Set a fixed reverse speed based on impact
+              y: v.y * 0.95 + (impactForce > 8 ? -3 : -1)  // Smaller upward force
+            }));
+            setRotationSpeed(rs => -rs * 1.2);  // Increased rotation on wall hits
+            // Count as backboard hit if near rim height
+            if (newPos.y > RIM_Y - 90 && newPos.y < RIM_Y + 90) {
+              hitBackboardRef.current = true;
+            }
+          } else if (newPos.x < 30) {
+            newPos.x = 30;
+            const impactForce = Math.abs(currentVelocity.x);
+            const reverseSpeed = Math.max(8, impactForce * 0.8);  // Ensure minimum reverse speed
+            setCurrentVelocity(v => ({
+              x: reverseSpeed,  // Set a fixed reverse speed based on impact
+              y: v.y * 0.95 + (impactForce > 8 ? -3 : -1)  // Smaller upward force
+            }));
+            setRotationSpeed(rs => -rs * 1.2);  // Increased rotation on wall hits
           }
 
           // Rim collisions with improved physics
@@ -186,46 +214,35 @@ const BasketballGame = () => {
             if (newPos.x + BALL_RADIUS > RIM_FRONT && newPos.x - BALL_RADIUS < RIM_FRONT && pos.x - BALL_RADIUS <= RIM_FRONT) {
               newPos.x = RIM_FRONT - BALL_RADIUS;
               setCurrentVelocity(v => ({
-                x: -v.x * BOUNCE_DAMPING * 0.8,  // Reduced from 1.2 to 0.8
+                x: -v.x * BOUNCE_DAMPING * 0.8,
                 y: v.y * 0.95 - 1.5
               }));
+              setHitRim(true);
             }
             // Ball hitting back of rim
             else if (newPos.x + BALL_RADIUS > RIM_BACK && newPos.x - BALL_RADIUS < RIM_BACK && pos.x + BALL_RADIUS >= RIM_BACK) {
               newPos.x = RIM_BACK + BALL_RADIUS;
               setCurrentVelocity(v => ({
-                x: -v.x * BOUNCE_DAMPING * 0.8,  // Reduced from 1.2 to 0.8
+                x: -v.x * BOUNCE_DAMPING * 0.8,
                 y: v.y * 0.95 - 1.5
               }));
+              setHitRim(true);
             }
-            setHitRim(true);
-          }
-
-          // Debug logging with relative positions
-          if (Math.abs(newPos.y - RIM_Y) < 50) {
-            console.log('Ball Position:', {
-              yDistanceFromRim: (RIM_Y - newPos.y).toFixed(1),
-              xDistanceFromCenter: (SCORING_X - newPos.x).toFixed(1),
-              willScore: !scoredRef.current && 
-                        ((pos.y <= RIM_Y && newPos.y >= RIM_Y) ||
-                         (pos.y >= RIM_Y && newPos.y <= RIM_Y)) &&
-                        Math.abs(newPos.x - SCORING_X) < ALLOWED_OFFSET
-            });
           }
 
           // Score detection at the actual scoring position
-          if (!scoredRef.current && 
-              ((pos.y <= RIM_Y && newPos.y >= RIM_Y) ||
-               (pos.y >= RIM_Y && newPos.y <= RIM_Y)) &&
-              Math.abs(newPos.x - SCORING_X) < ALLOWED_OFFSET) {
+          const isPassingDownThroughRim = pos.y <= RIM_Y && newPos.y >= RIM_Y;
+          const isWithinRimXRange = newPos.x >= RIM_FRONT && newPos.x <= RIM_BACK + RIM_WIDTH;
+
+          if (!scoredRef.current && isPassingDownThroughRim && isWithinRimXRange) {
             setScore(s => s + POINTS_PER_BASKET);
-            scoredRef.current = true;  // Just mark that we scored, don't update makes yet
+            scoredRef.current = true;
             
             // Set shot label based on how it went in
-            if (!hitBackboard && !hitRim) {
+            if (!hitBackboardRef.current && !hitRim) {
               setShotLabel('SWISH!');
-            } else if (hitBackboard) {
-              setShotLabel('BANK!');
+            } else if (hitBackboardRef.current && !hitRim) {
+              setShotLabel('SCORE!');
             } else {
               setShotLabel('SCORE!');
             }
@@ -233,6 +250,21 @@ const BasketballGame = () => {
             setTimeout(() => {
               setShotLabel('');
             }, 1000);
+          } 
+
+          // Debug logging with relative positions
+          if (Math.abs(newPos.y - RIM_Y) < 50) {
+            console.log('Ball Position:', {
+              yDistanceFromRim: (RIM_Y - newPos.y).toFixed(1),
+              xPosition: newPos.x,
+              rimFront: RIM_FRONT,
+              rimBack: RIM_BACK,
+              willScore: !scoredRef.current && isPassingDownThroughRim && isWithinRimXRange,
+              hitBackboard: hitBackboardRef.current,
+              hitRim,
+              isPassingDown: isPassingDownThroughRim,
+              isWithinRange: isWithinRimXRange
+            });
           }
 
           return newPos;
@@ -255,27 +287,28 @@ const BasketballGame = () => {
 
   return (
     <div className="min-h-screen bg-white flex justify-center items-center">
-      <div className="relative w-[650px] h-[400px] bg-gray-900 border-2 border-gray-700">
-        {/* Shot Label */}
-        {shotLabel && (
-          <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-4xl font-bold text-white z-10">
-            {shotLabel}
-          </div>
-        )}
-
+      <div 
+        ref={containerRef}
+        className="relative w-full max-w-[650px] h-[400px] sm:h-[400px] bg-gray-900 border-2 border-gray-700 touch-none"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleTouchStart}
+        onMouseUp={handleTouchEnd}
+        onMouseLeave={handleTouchEnd}  // Handle mouse leaving the game area
+      >
         {/* Score and Accuracy */}
-        <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start text-white">
+        <div className="absolute top-0 left-0 right-0 p-2 sm:p-4 flex justify-between items-start text-white">
           <div className="flex flex-col">
-            <div className="text-2xl font-bold">Score: {score}</div>
-            <div className="text-xl">
+            <div className="text-xl sm:text-2xl font-bold">Score: {score}</div>
+            <div className="text-lg sm:text-xl">
               {makes} / {attempts} ({attempts > 0 ? Math.round((makes/attempts) * 100) : 0}%)
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <div className="text-sm">
-              Hold SPACEBAR to set power - More power = longer shot!
+          <div className="flex flex-col items-end gap-1 sm:gap-2">
+            <div className="text-xs sm:text-sm text-center">
+              {window.innerWidth <= 640 ? 'Tap and hold to shoot!' : 'Hold SPACEBAR to set power - More power = longer shot!'}
             </div>
-            <div className="w-32 h-6 border-2 border-white bg-black">
+            <div className="w-24 sm:w-32 h-4 sm:h-6 border-2 border-white bg-black">
               <div
                 className="h-full transition-all duration-75"
                 style={{ 
@@ -287,9 +320,16 @@ const BasketballGame = () => {
           </div>
         </div>
 
+        {/* Shot Label */}
+        {shotLabel && (
+          <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl sm:text-4xl font-bold text-white z-10">
+            {shotLabel}
+          </div>
+        )}
+
         {/* Ball */}
         <div
-          className="absolute text-4xl transition-transform"
+          className="absolute text-3xl sm:text-4xl transition-transform"
           style={{
             left: `${ballPos.x}px`,
             top: `${ballPos.y}px`,
