@@ -11,6 +11,12 @@ const BasketballGame = () => {
   const [rotation, setRotation] = useState(0);
   const [rotationSpeed, setRotationSpeed] = useState(0);
   const scoredRef = useRef(false);  // Using ref instead of state for immediate updates
+  const [shotLabel, setShotLabel] = useState('');
+  const [hitBackboard, setHitBackboard] = useState(false);
+  const [hitRim, setHitRim] = useState(false);
+  const [makes, setMakes] = useState(0);
+  const [attempts, setAttempts] = useState(0);
+  const attemptInProgressRef = useRef(false);  // Track if shot is in progress
 
   // Game constants
   const PERFECT_VELOCITY_X = 12;
@@ -21,17 +27,18 @@ const BasketballGame = () => {
   const BOUNCE_DAMPING = 0.89;    // Increased from 0.85 for more bounce
   const GROUND_FRICTION = 0.98;   // Increased from 0.95 for smoother rolling
   const MIN_SPEED = 0.1;
-  const RESET_DELAY = 2000;
+  const RESET_DELAY = 1500;
   const INITIAL_ROTATION_SPEED = 15;
 
-  // Rim dimensions and center - back to original values
+  // Rim dimensions and center
   const RIM_FRONT = 550;
   const RIM_BACK = 598;
   const RIM_Y = 180;
   const RIM_CENTER_X = (RIM_FRONT + RIM_BACK) / 2;
   const BALL_RADIUS = 15;
   const RIM_WIDTH = 48;
-  const ALLOWED_OFFSET = (RIM_WIDTH / 2) - BALL_RADIUS;
+  const SCORING_X = 620;  // New constant based on where scoring actually occurs
+  const ALLOWED_OFFSET = 15;  // Adjusted scoring window
 
   // Handle spacebar
   useEffect(() => {
@@ -46,6 +53,9 @@ const BasketballGame = () => {
           scoredRef.current = false;  // Reset scoring ref instead of state
           setRotation(0);
           setRotationSpeed(0);
+          setShotLabel('');
+          setHitBackboard(false);
+          setHitRim(false);
         }
         setHolding(true);
       }
@@ -54,7 +64,7 @@ const BasketballGame = () => {
     const handleKeyUp = (e) => {
       if (e.code === 'Space' && holding) {
         e.preventDefault();
-        const powerFactor = power / 100;  // Now using full power range from 0-100%
+        const powerFactor = power / 100;
         setCurrentVelocity({
           x: PERFECT_VELOCITY_X * powerFactor,
           y: PERFECT_VELOCITY_Y * powerFactor
@@ -62,7 +72,7 @@ const BasketballGame = () => {
         setHolding(false);
         setIsMoving(true);
         setTime(0);
-        setRotationSpeed(INITIAL_ROTATION_SPEED);
+        attemptInProgressRef.current = true;  // Mark shot as in progress
       }
     };
 
@@ -90,6 +100,29 @@ const BasketballGame = () => {
     return () => clearInterval(powerInterval);
   }, [holding, isMoving]);
 
+  // Add shot timer
+  useEffect(() => {
+    let resetTimer;
+    if (isMoving) {
+      resetTimer = setTimeout(() => {
+        setBallPos({ x: 100, y: 350 });
+        setIsMoving(false);
+        setTime(0);
+        setCurrentVelocity({ x: 0, y: 0 });
+        if (attemptInProgressRef.current) {
+          // Update makes and attempts together at end of shot
+          if (scoredRef.current) {
+            setMakes(m => m + 1);
+          }
+          setAttempts(a => a + 1);
+          attemptInProgressRef.current = false;
+          scoredRef.current = false;
+        }
+      }, RESET_DELAY);
+    }
+    return () => clearTimeout(resetTimer);
+  }, [isMoving]);
+
   // Ball physics with collisions
   useEffect(() => {
     let frameId;
@@ -97,16 +130,22 @@ const BasketballGame = () => {
     const updatePosition = () => {
       if (isMoving) {
         setTime(t => t + 1);
-        setRotation(r => r + rotationSpeed);  // Update rotation each frame
+        setRotation(r => r + rotationSpeed);
         setBallPos(pos => {
           const newPos = {
             x: pos.x + currentVelocity.x,
             y: pos.y + currentVelocity.y + (GRAVITY * time)
           };
 
-          // Ground collision with friction - adjusted to match ball's starting height
-          if (newPos.y > 350) {  // Changed from a lower value to match starting y position
+          // Ground collision - show MISS if we hit ground without scoring
+          if (newPos.y > 350) {
             newPos.y = 350;
+            if (!scoredRef.current) {
+              setShotLabel('MISS!');
+              setTimeout(() => {
+                setShotLabel('');
+              }, 1000);
+            }
             setCurrentVelocity(v => ({
               x: v.x * GROUND_FRICTION,
               y: -v.y * BOUNCE_DAMPING
@@ -138,16 +177,16 @@ const BasketballGame = () => {
             const impactForce = Math.abs(currentVelocity.x);
             if (impactForce > 8) {
               setCurrentVelocity(v => ({
-                x: -v.x * BOUNCE_DAMPING * 0.9,  // Reduced from 1.3 to 0.9
+                x: -v.x * BOUNCE_DAMPING * 0.9,
                 y: v.y * 0.95 - 2
               }));
             } else {
               setCurrentVelocity(v => ({
-                x: -v.x * BOUNCE_DAMPING * 0.8,  // Reduced from 1.1 to 0.8
+                x: -v.x * BOUNCE_DAMPING * 0.8,
                 y: v.y * 0.95
               }));
             }
-            return newPos;  // Return immediately after backboard collision
+            setHitBackboard(true);
           }
 
           // Rim collisions with improved physics
@@ -168,28 +207,41 @@ const BasketballGame = () => {
                 y: v.y * 0.95 - 1.5
               }));
             }
+            setHitRim(true);
           }
 
-          // Debug logging with more info
+          // Debug logging with relative positions
           if (Math.abs(newPos.y - RIM_Y) < 50) {
             console.log('Ball Position:', {
-              y: pos.y.toFixed(1),
-              nextY: newPos.y.toFixed(1),
-              x: newPos.x.toFixed(1),
-              distanceFromRim: Math.abs(newPos.x - RIM_CENTER_X).toFixed(1),
-              allowedOffset: ALLOWED_OFFSET,
-              rimY: RIM_Y,
-              rimX: RIM_CENTER_X
+              yDistanceFromRim: (RIM_Y - newPos.y).toFixed(1),
+              xDistanceFromCenter: (SCORING_X - newPos.x).toFixed(1),
+              willScore: !scoredRef.current && 
+                        ((pos.y <= RIM_Y && newPos.y >= RIM_Y) ||
+                         (pos.y >= RIM_Y && newPos.y <= RIM_Y)) &&
+                        Math.abs(newPos.x - SCORING_X) < ALLOWED_OFFSET
             });
           }
 
-          // Score when ball passes through rim height
+          // Score detection at the actual scoring position
           if (!scoredRef.current && 
               ((pos.y <= RIM_Y && newPos.y >= RIM_Y) ||
                (pos.y >= RIM_Y && newPos.y <= RIM_Y)) &&
-              Math.abs(newPos.x - RIM_CENTER_X) < ALLOWED_OFFSET) {
+              Math.abs(newPos.x - SCORING_X) < ALLOWED_OFFSET) {
             setScore(s => s + POINTS_PER_BASKET);
-            scoredRef.current = true;
+            scoredRef.current = true;  // Just mark that we scored, don't update makes yet
+            
+            // Set shot label based on how it went in
+            if (!hitBackboard && !hitRim) {
+              setShotLabel('SWISH!');
+            } else if (hitBackboard) {
+              setShotLabel('BANK!');
+            } else {
+              setShotLabel('SCORE!');
+            }
+            
+            setTimeout(() => {
+              setShotLabel('');
+            }, 1000);
           }
 
           return newPos;
@@ -210,38 +262,37 @@ const BasketballGame = () => {
     };
   }, [isMoving, time, currentVelocity, rotationSpeed]);
 
-  // Add shot timer
-  useEffect(() => {
-    let resetTimer;
-    if (isMoving) {
-      resetTimer = setTimeout(() => {
-        setBallPos({ x: 100, y: 350 });
-        setIsMoving(false);
-        setTime(0);
-        setCurrentVelocity({ x: 0, y: 0 });
-        scoredRef.current = false;  // Reset scoring ref instead of state
-      }, RESET_DELAY);
-    }
-    return () => clearTimeout(resetTimer);
-  }, [isMoving]);
-
   return (
     <div className="min-h-screen bg-white flex justify-center items-center">
       <div className="relative w-[650px] h-[400px] bg-gray-900 border-2 border-gray-700">
-        {/* Score and Instructions */}
-        <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center text-white">
-          <div className="text-2xl font-bold">Score: {score}</div>
-          <div className="text-sm">
-            Hold SPACEBAR to set power - More power = longer shot!
+        {/* Shot Label */}
+        {shotLabel && (
+          <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-4xl font-bold text-white z-10">
+            {shotLabel}
           </div>
-          <div className="w-32 h-6 border-2 border-white bg-black">
-            <div
-              className="h-full transition-all duration-75"
-              style={{ 
-                width: `${power}%`,
-                backgroundColor: '#22c55e'  // Always green now since all power levels are valid
-              }}
-            />
+        )}
+
+        {/* Score and Accuracy */}
+        <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start text-white">
+          <div className="flex flex-col">
+            <div className="text-2xl font-bold">Score: {score}</div>
+            <div className="text-xl">
+              {makes} / {attempts} ({attempts > 0 ? Math.round((makes/attempts) * 100) : 0}%)
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <div className="text-sm">
+              Hold SPACEBAR to set power - More power = longer shot!
+            </div>
+            <div className="w-32 h-6 border-2 border-white bg-black">
+              <div
+                className="h-full transition-all duration-75"
+                style={{ 
+                  width: `${power}%`,
+                  backgroundColor: '#22c55e'
+                }}
+              />
+            </div>
           </div>
         </div>
 
