@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const BasketballGame = () => {
   const [ballPos, setBallPos] = useState({ x: 100, y: 350 });
   const [isMoving, setIsMoving] = useState(false);
   const [time, setTime] = useState(0);
   const [score, setScore] = useState(0);
-  const [scored, setScored] = useState(false);
   const [power, setPower] = useState(0);
   const [holding, setHolding] = useState(false);
   const [currentVelocity, setCurrentVelocity] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState(0);
   const [rotationSpeed, setRotationSpeed] = useState(0);
+  const scoredRef = useRef(false);  // Using ref instead of state for immediate updates
 
   // Game constants
   const PERFECT_VELOCITY_X = 12;
@@ -18,11 +18,20 @@ const BasketballGame = () => {
   const GRAVITY = 0.4;
   const POWER_RATE = 2.0;
   const POINTS_PER_BASKET = 3;
-  const BOUNCE_DAMPING = 0.85;
-  const GROUND_FRICTION = 0.99;    // Increased from 0.98 for even less friction
+  const BOUNCE_DAMPING = 0.89;    // Increased from 0.85 for more bounce
+  const GROUND_FRICTION = 0.98;   // Increased from 0.95 for smoother rolling
   const MIN_SPEED = 0.1;
   const RESET_DELAY = 2000;
   const INITIAL_ROTATION_SPEED = 15;
+
+  // Rim dimensions and center - back to original values
+  const RIM_FRONT = 550;
+  const RIM_BACK = 598;
+  const RIM_Y = 180;
+  const RIM_CENTER_X = (RIM_FRONT + RIM_BACK) / 2;
+  const BALL_RADIUS = 15;
+  const RIM_WIDTH = 48;
+  const ALLOWED_OFFSET = (RIM_WIDTH / 2) - BALL_RADIUS;
 
   // Handle spacebar
   useEffect(() => {
@@ -34,7 +43,7 @@ const BasketballGame = () => {
           setIsMoving(false);
           setTime(0);
           setCurrentVelocity({ x: 0, y: 0 });
-          setScored(false);
+          scoredRef.current = false;  // Reset scoring ref instead of state
           setRotation(0);
           setRotationSpeed(0);
         }
@@ -53,7 +62,6 @@ const BasketballGame = () => {
         setHolding(false);
         setIsMoving(true);
         setTime(0);
-        setScored(false);
         setRotationSpeed(INITIAL_ROTATION_SPEED);
       }
     };
@@ -96,26 +104,32 @@ const BasketballGame = () => {
             y: pos.y + currentVelocity.y + (GRAVITY * time)
           };
 
-          // Ground collision with friction - preserve more horizontal momentum
-          if (newPos.y > 350) {
+          // Ground collision with friction - adjusted to match ball's starting height
+          if (newPos.y > 350) {  // Changed from a lower value to match starting y position
             newPos.y = 350;
             setCurrentVelocity(v => ({
-              x: v.x * GROUND_FRICTION * 1.1,  // Boost horizontal momentum
-              y: -v.y * BOUNCE_DAMPING * 0.9
+              x: v.x * GROUND_FRICTION,
+              y: -v.y * BOUNCE_DAMPING
             }));
             setRotationSpeed(rs => rs * GROUND_FRICTION);
             setTime(0);
           }
 
-          // Wall collision - stronger horizontal bounce
-          if (newPos.x > 620) {
+          // Wall collisions - both right and left walls
+          if (newPos.x > 620) {  // Right wall
             newPos.x = 620;
             setCurrentVelocity(v => ({
-              x: -v.x * BOUNCE_DAMPING * 1.2,
-              y: v.y * 0.98
+              x: -v.x * BOUNCE_DAMPING, 
+              y: v.y * BOUNCE_DAMPING 
             }));
             setRotationSpeed(rs => -rs * BOUNCE_DAMPING);
-            return newPos;  // Return immediately after wall collision to prevent scoring
+          } else if (newPos.x < 30) {  // Left wall
+            newPos.x = 30;
+            setCurrentVelocity(v => ({
+              x: -v.x * BOUNCE_DAMPING, 
+              y: v.y * BOUNCE_DAMPING 
+            }));
+            setRotationSpeed(rs => -rs * BOUNCE_DAMPING);
           }
 
           // Backboard collision with improved physics
@@ -124,41 +138,25 @@ const BasketballGame = () => {
             const impactForce = Math.abs(currentVelocity.x);
             if (impactForce > 8) {
               setCurrentVelocity(v => ({
-                x: -v.x * BOUNCE_DAMPING * 1.3,
+                x: -v.x * BOUNCE_DAMPING * 0.9,  // Reduced from 1.3 to 0.9
                 y: v.y * 0.95 - 2
               }));
             } else {
               setCurrentVelocity(v => ({
-                x: -v.x * BOUNCE_DAMPING * 1.1,
+                x: -v.x * BOUNCE_DAMPING * 0.8,  // Reduced from 1.1 to 0.8
                 y: v.y * 0.95
               }));
             }
             return newPos;  // Return immediately after backboard collision
           }
 
-          // Super simplified scoring detection - just check if ball passes through rim plane
-          const RIM_FRONT = 580;
-          const RIM_BACK = 628;
-          const RIM_Y = 190;
-
-          // Score if ball passes through rim area and hasn't scored on this shot yet
-          if (!scored && 
-              pos.x < RIM_FRONT &&  // Ball was previously before the rim
-              newPos.x >= RIM_FRONT && 
-              newPos.x < RIM_BACK &&  // Add check to ensure ball isn't past back of rim
-              Math.abs(newPos.y - RIM_Y) < 25) {
-            setScore(s => s + POINTS_PER_BASKET);
-            setScored(true);
-          }
-
           // Rim collisions with improved physics
           if (newPos.y > RIM_Y - 20 && newPos.y < RIM_Y + 20) {
-            const BALL_RADIUS = 15;
             // Ball hitting front of rim
             if (newPos.x + BALL_RADIUS > RIM_FRONT && newPos.x - BALL_RADIUS < RIM_FRONT && pos.x - BALL_RADIUS <= RIM_FRONT) {
               newPos.x = RIM_FRONT - BALL_RADIUS;
               setCurrentVelocity(v => ({
-                x: -v.x * BOUNCE_DAMPING * 1.2,  // Increased from 0.9 to 1.2
+                x: -v.x * BOUNCE_DAMPING * 0.8,  // Reduced from 1.2 to 0.8
                 y: v.y * 0.95 - 1.5
               }));
             }
@@ -166,10 +164,32 @@ const BasketballGame = () => {
             else if (newPos.x + BALL_RADIUS > RIM_BACK && newPos.x - BALL_RADIUS < RIM_BACK && pos.x + BALL_RADIUS >= RIM_BACK) {
               newPos.x = RIM_BACK + BALL_RADIUS;
               setCurrentVelocity(v => ({
-                x: -v.x * BOUNCE_DAMPING * 1.2,  // Increased from 0.9 to 1.2
+                x: -v.x * BOUNCE_DAMPING * 0.8,  // Reduced from 1.2 to 0.8
                 y: v.y * 0.95 - 1.5
               }));
             }
+          }
+
+          // Debug logging with more info
+          if (Math.abs(newPos.y - RIM_Y) < 50) {
+            console.log('Ball Position:', {
+              y: pos.y.toFixed(1),
+              nextY: newPos.y.toFixed(1),
+              x: newPos.x.toFixed(1),
+              distanceFromRim: Math.abs(newPos.x - RIM_CENTER_X).toFixed(1),
+              allowedOffset: ALLOWED_OFFSET,
+              rimY: RIM_Y,
+              rimX: RIM_CENTER_X
+            });
+          }
+
+          // Score when ball passes through rim height
+          if (!scoredRef.current && 
+              ((pos.y <= RIM_Y && newPos.y >= RIM_Y) ||
+               (pos.y >= RIM_Y && newPos.y <= RIM_Y)) &&
+              Math.abs(newPos.x - RIM_CENTER_X) < ALLOWED_OFFSET) {
+            setScore(s => s + POINTS_PER_BASKET);
+            scoredRef.current = true;
           }
 
           return newPos;
@@ -188,7 +208,7 @@ const BasketballGame = () => {
         cancelAnimationFrame(frameId);
       }
     };
-  }, [isMoving, time, currentVelocity, scored, rotationSpeed]);
+  }, [isMoving, time, currentVelocity, rotationSpeed]);
 
   // Add shot timer
   useEffect(() => {
@@ -199,7 +219,7 @@ const BasketballGame = () => {
         setIsMoving(false);
         setTime(0);
         setCurrentVelocity({ x: 0, y: 0 });
-        setScored(false);
+        scoredRef.current = false;  // Reset scoring ref instead of state
       }, RESET_DELAY);
     }
     return () => clearTimeout(resetTimer);
