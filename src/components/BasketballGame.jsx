@@ -547,21 +547,21 @@ const BasketballGame = () => {
           <span className="text-lg">
             UC San Diego featured in:{" "}
             <a 
-              href="https://www.nytimes.com/athletic/6192140/2025/03/11/uc-san-diego-ncaa-tournament-eric-olen/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              NY Times
-            </a>
-            {" | "}
-            <a 
               href="https://www.cbssports.com/college-basketball/news/finally-eligible-for-march-madness-division-is-most-unlikely-success-story-out-to-prove-its-not-done-yet/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-800 hover:underline"
             >
               CBS Sports
+            </a>
+            {" | "}
+            <a 
+              href="https://www.nytimes.com/athletic/6192140/2025/03/11/uc-san-diego-ncaa-tournament-eric-olen/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              NY Times
             </a>
           </span>
         </div>
@@ -679,7 +679,7 @@ const BasketballGame = () => {
           Did you know?
         </h2>
         <div className="h-[100px] flex items-center justify-center mb-2">
-          <p className={`text-xl text-[#182B49] transition-opacity duration-300 ${fadeOut ? 'opacity-0' : 'opacity-100'}`}>
+          <p className={`text-xl text-[#182B49] transition-opacity duration-300 px-12 max-w-[600px] ${fadeOut ? 'opacity-0' : 'opacity-100'}`}>
             <span className="italic">
               {currentFact.slice(0, currentFact.lastIndexOf(' '))}
             </span>
