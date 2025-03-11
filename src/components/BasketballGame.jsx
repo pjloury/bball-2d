@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import bigWestLogo from '../assets/big-west.png';
 import ucsdFacts from '../data/ucsdFacts.json';
+import ucsdLogo from '../assets/ucsandiego.png';
+import nextStopLogo from '../assets/next-stop.png';
 
 const BasketballGame = () => {
   const [ballPos, setBallPos] = useState({ x: 100, y: 350 });
@@ -377,22 +379,18 @@ const BasketballGame = () => {
             setScore(s => s + POINTS_PER_BASKET);
             scoredRef.current = true;
             
-            // Wait a tiny bit to ensure any rim/backboard hits are registered
+            // Set shot label based on how it went in
+            if (!hitBackboardRef.current && !hitRim) {
+              setShotLabel('SWISH! 🔱');
+            } else if (hitBackboardRef.current && !hitRim) {
+              setShotLabel('OFF THE GLASS! 🔱');
+            } else {
+              setShotLabel('SCORE! 🔱');
+            }
+            
             setTimeout(() => {
-              // Set shot label based on how it went in, checking current collision state
-              if (!hitBackboardRef.current && !hitRim) {
-                setShotLabel('SWISH!');
-              } else if (hitBackboardRef.current && !hitRim) {
-                setShotLabel('OFF THE GLASS!');
-              } else {
-                setShotLabel('SCORE!');
-              }
-              
-              // Clear the label after showing it
-              setTimeout(() => {
-                setShotLabel('');
-              }, 1000);
-            }, 16); // One frame delay to ensure collisions are registered
+              setShotLabel('');
+            }, 1000);
           }
 
           // Debug logging
@@ -427,7 +425,7 @@ const BasketballGame = () => {
     };
   }, [isMoving, time, currentVelocity, rotationSpeed]);
 
-  // Update the power meter color calculation to center on sweet spot
+  // Update the power meter color calculation
   const getPowerMeterColor = (powerValue) => {
     const sweetSpotCenter = (SWEET_SPOT_MIN + SWEET_SPOT_MAX) / 2;
     const sweetSpotRange = (SWEET_SPOT_MAX - SWEET_SPOT_MIN) / 2;
@@ -453,37 +451,104 @@ const BasketballGame = () => {
     setCurrentFact(ucsdFacts.facts[randomIndex]);
   }, []);
 
+  // Add UCSD brand colors as constants
+  const UCSD_COLORS = {
+    navy: '#182B49',    // UCSD Navy Blue
+    gold: '#FFCD00',    // UCSD Gold
+  };
+
+  // Add state for overlay
+  const [showOverlay, setShowOverlay] = useState(true);
+
+  // Add auto-dismiss timer
+  useEffect(() => {
+    if (showOverlay) {
+      const timer = setTimeout(() => {
+        setShowOverlay(false);
+      }, 4000);  // 4 seconds
+
+      // Cleanup timer if component unmounts or overlay is manually dismissed
+      return () => clearTimeout(timer);
+    }
+  }, [showOverlay]);
+
   return (
     <div className="min-h-screen bg-white flex flex-col items-center select-none">
-      {/* Title */}
-      <h1 className="text-4xl font-bold text-gray-900 mb-8 mt-8">
+      {/* Overlay */}
+      {showOverlay && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setShowOverlay(false)}
+        >
+          <div 
+            className="bg-white p-8 rounded-lg flex flex-col items-center gap-6 m-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <img 
+              src={nextStopLogo}
+              alt="Next Stop"
+              className="w-full max-w-[650px] max-h-[70vh] px-4 object-contain"
+            />
+            <button 
+              onClick={() => setShowOverlay(false)}
+              className="bg-[#FFCD00] px-6 py-2 text-xl font-bold text-[#182B49] hover:bg-[#182B49] hover:text-[#FFCD00] transition-all border-2 border-[#182B49] hover:border-[#FFCD00]"
+            >
+              Let's Go!
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* UCSD Logo with link */}
+      <a 
+        href="https://ucsdtritons.com/sports/mens-basketball"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-8 mb-4"
+      >
+        <img 
+          src={ucsdLogo}
+          alt="UC San Diego"
+          className="w-full max-w-[200px] px-4"
+        />
+      </a>
+
+      {/* Title with UCSD colors */}
+      <h1 className="text-4xl font-bold text-[#182B49] mb-8 mt-8">  {/* Navy blue title */}
         Basketball 2D 🏀
       </h1>
 
-      {/* Game Container */}
+      {/* Game Container with navy border */}
       <div 
         ref={containerRef}
-        className="relative w-full max-w-[650px] h-[400px] sm:h-[400px] bg-gray-900 border-2 border-gray-700 touch-none select-none"
+        className="relative w-full max-w-[650px] h-[400px] sm:h-[400px] bg-gray-900 border-2 border-[#182B49] touch-none select-none"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleTouchStart}
         onMouseUp={handleTouchEnd}
         onMouseLeave={handleTouchEnd}
       >
-        {/* Score and Accuracy */}
-        <div className="absolute top-0 left-0 right-0 p-2 sm:p-4 flex justify-between items-start text-white select-none">
+        {/* Score display with mixed colors */}
+        <div className="absolute top-0 left-0 right-0 p-2 sm:p-4 flex justify-between items-start select-none">
           <div className="flex flex-col select-none">
-            <div className="text-xl sm:text-2xl font-bold">{score}</div>
-            <div className="text-lg sm:text-xl">
+            <div className="text-xl sm:text-2xl font-bold text-[#FFCD00]">{score}</div>
+            <div className="text-lg sm:text-xl text-white">
               {makes} / {attempts} ({attempts > 0 ? Math.round((makes/attempts) * 100) : 0}%)
             </div>
           </div>
+
+          {/* Power meter with UCSD colors */}
           <div className="flex flex-col items-end gap-1 sm:gap-2 select-none">
-            <div className="text-xs sm:text-sm text-center">
-              {window.innerWidth <= 640 ? 'Tap and hold to set power' : 'Hold SPACEBAR or tap on screen to set power'}
+            <div className="text-xs sm:text-sm text-center text-white">
+              {window.innerWidth <= 640 ? 
+                'Tap and hold to set power' : 
+                <>
+                  Hold <span className="text-[#FFCD00]">SPACEBAR</span> or tap screen to set power
+                </>
+              }
             </div>
             <div className="relative w-24 sm:w-32 h-4 sm:h-6 border-2 border-white bg-black">
-              {/* Sweet spot range indicators */}
+              {/* Sweet spot indicators */}
               <div 
                 className="absolute h-full w-0.5 bg-white opacity-30" 
                 style={{ left: `${SWEET_SPOT_MIN}%` }}
@@ -508,7 +573,7 @@ const BasketballGame = () => {
           </div>
         </div>
 
-        {/* Shot Label */}
+        {/* Shot label in white */}
         {shotLabel && (
           <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl sm:text-4xl font-bold text-white z-10 select-none">
             {shotLabel}
@@ -559,25 +624,39 @@ const BasketballGame = () => {
         </div>
       </div>
 
-      {/* UCSD Caption and Fact */}
+      {/* UCSD Caption with brand colors */}
       <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mt-8">
-          Let's go UCSD! 🔱
+        <h2 className="text-3xl font-bold text-[#182B49] mt-8">
+          <a 
+            href="https://ucsdtritons.com/sports/mens-basketball" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="bg-[#FFCD00] px-4 py-1 hover:bg-[#182B49] text-[#182B49] hover:text-[#FFCD00] transition-all border-2 border-[#182B49] hover:border-[#FFCD00]"
+          >
+            Let's go UCSD Tritons! 🔱
+          </a>
         </h2>
-        <h3 className="text-xl font-semibold text-gray-700 mt-4">
+        <h3 className="text-xl font-semibold text-[#182B49] mt-4">
           Did you know?
         </h3>
-        <p className="text-xl text-gray-700 italic mt-2 max-w-[600px] px-4">
+        <p className="text-xl text-[#182B49] italic mt-2 max-w-[600px] px-4">
           {currentFact}
         </p>
       </div>
 
-      {/* Big West Logo */}
-      <img 
-        src={bigWestLogo}
-        alt="Big West Conference"
-        className="w-full max-w-[560px] px-4 mt-auto mb-8"
-      />
+      {/* Big West Logo as clickable link */}
+      <a 
+        href="https://bigwest.org/tournaments/?id=121"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-auto mb-8"
+      >
+        <img 
+          src={bigWestLogo}
+          alt="Big West Conference"
+          className="w-full max-w-[560px] px-4"
+        />
+      </a>
     </div>
   );
 };
