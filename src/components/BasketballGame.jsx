@@ -529,7 +529,7 @@ const BasketballGame = () => {
         href="https://ucsdtritons.com/sports/mens-basketball"
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-8 mb-4 border-b-4 border-transparent hover:border-[#FFCD00] transition-colors"
+        className="mt-8 mb-2 border-b-4 border-transparent hover:border-[#FFCD00] transition-colors"
       >
         <img 
           src={ucsdLogo}
@@ -539,31 +539,33 @@ const BasketballGame = () => {
       </a>
 
       {/* Title with UCSD colors */}
-      <h1 className="text-4xl font-bold text-[#182B49] mb-8 mt-8">
+      <h1 className="text-4xl font-bold text-[#182B49] mb-8 mt-4">
         Let's go Tritons! 🔱
       </h1>
       <div className="flex flex-col items-center gap-2 -mt-6 mb-8">
-        <div className="text-gray-700">
-          <span className="text-lg">
-            UC San Diego featured in:{" "}
+        <div className="text-center max-w-[600px] px-4">
+          <span className="text-lg text-gray-700">
+            UC San Diego featured in:
+          </span>
+          <div className="flex flex-wrap justify-center gap-x-2 mt-1">
             <a 
               href="https://www.cbssports.com/college-basketball/news/finally-eligible-for-march-madness-division-is-most-unlikely-success-story-out-to-prove-its-not-done-yet/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 hover:underline"
+              className="text-lg text-blue-600 hover:text-blue-800 hover:underline"
             >
               CBS Sports
             </a>
-            {" | "}
+            <span className="text-lg text-gray-700">|</span>
             <a 
               href="https://www.nytimes.com/athletic/6192140/2025/03/11/uc-san-diego-ncaa-tournament-eric-olen/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 hover:underline"
+              className="text-lg text-blue-600 hover:text-blue-800 hover:underline"
             >
               NY Times
             </a>
-          </span>
+          </div>
         </div>
       </div>
 
