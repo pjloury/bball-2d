@@ -484,6 +484,19 @@ const BasketballGame = () => {
     }
   }, [showOverlay]);
 
+  // Add state for fade animation
+  const [fadeOut, setFadeOut] = useState(false);
+
+  // Modify the fact change handler
+  const handleNewFact = () => {
+    setFadeOut(true);
+    setTimeout(() => {
+      const randomIndex = Math.floor(Math.random() * ucsdFacts.facts.length);
+      setCurrentFact(ucsdFacts.facts[randomIndex]);
+      setFadeOut(false);
+    }, 300); // Match this with CSS transition duration
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col items-center select-none">
       {/* Overlay */}
@@ -516,7 +529,7 @@ const BasketballGame = () => {
         href="https://ucsdtritons.com/sports/mens-basketball"
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-8 mb-4"
+        className="mt-8 mb-4 border-b-4 border-transparent hover:border-[#FFCD00] transition-colors"
       >
         <img 
           src={ucsdLogo}
@@ -526,9 +539,33 @@ const BasketballGame = () => {
       </a>
 
       {/* Title with UCSD colors */}
-      <h1 className="text-4xl font-bold text-[#182B49] mb-8 mt-8">  {/* Navy blue title */}
-        Basketball 2D 🏀
+      <h1 className="text-4xl font-bold text-[#182B49] mb-8 mt-8">
+        Let's go Tritons! 🔱
       </h1>
+      <div className="flex flex-col items-center gap-2 -mt-6 mb-8">
+        <div className="text-gray-700">
+          <span className="text-lg">
+            UC San Diego featured in:{" "}
+            <a 
+              href="https://www.nytimes.com/athletic/6192140/2025/03/11/uc-san-diego-ncaa-tournament-eric-olen/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              NY Times
+            </a>
+            {" | "}
+            <a 
+              href="https://www.cbssports.com/college-basketball/news/finally-eligible-for-march-madness-division-is-most-unlikely-success-story-out-to-prove-its-not-done-yet/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              CBS Sports
+            </a>
+          </span>
+        </div>
+      </div>
 
       {/* Game Container with navy border */}
       <div 
@@ -636,24 +673,27 @@ const BasketballGame = () => {
         </div>
       </div>
 
-      {/* UCSD Caption with brand colors */}
+      {/* UCSD Caption and Fact */}
       <div className="text-center">
-        <h2 className="text-3xl font-bold text-[#182B49] mt-8">
-          <a 
-            href="https://ucsdtritons.com/sports/mens-basketball" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="bg-[#FFCD00] px-4 py-1 hover:bg-[#182B49] text-[#182B49] hover:text-[#FFCD00] transition-all border-2 border-[#182B49] hover:border-[#FFCD00]"
-          >
-            Let's go UCSD Tritons! 🔱
-          </a>
-        </h2>
-        <h3 className="text-xl font-semibold text-[#182B49] mt-4">
+        <h2 className="text-2xl font-semibold text-[#182B49] mt-4">
           Did you know?
-        </h3>
-        <p className="text-xl text-[#182B49] italic mt-2 max-w-[600px] px-4">
-          {currentFact}
-        </p>
+        </h2>
+        <div className="h-[100px] flex items-center justify-center mb-2">
+          <p className={`text-xl text-[#182B49] transition-opacity duration-300 ${fadeOut ? 'opacity-0' : 'opacity-100'}`}>
+            <span className="italic">
+              {currentFact.slice(0, currentFact.lastIndexOf(' '))}
+            </span>
+            <span>
+              {' ' + currentFact.slice(currentFact.lastIndexOf(' ') + 1)}
+            </span>
+          </p>
+        </div>
+        <button
+          onClick={handleNewFact}
+          className="mt-2 mb-8 bg-[#182B49] px-6 py-2 text-[#FFCD00] active:bg-[#FFCD00] active:text-[#182B49] transition-all border-2 border-[#FFCD00] active:border-[#182B49] text-lg font-semibold"
+        >
+          Give me another fact! 🏀
+        </button>
       </div>
 
       {/* Big West Logo as clickable link */}
@@ -661,12 +701,12 @@ const BasketballGame = () => {
         href="https://bigwest.org/tournaments/?id=121"
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-auto mb-8"
+        className="mt-auto mb-8 border-b-4 border-transparent hover:border-[#FFCD00] transition-colors"
       >
         <img 
           src={bigWestLogo}
           alt="Big West Conference"
-          className="w-full max-w-[560px] px-4"
+          className="w-full max-w-[450px] px-4"
         />
       </a>
     </div>
