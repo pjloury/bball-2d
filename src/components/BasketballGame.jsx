@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import nbaAllStarLogo from '../assets/nba-allstar.png';
+import bigWestLogo from '../assets/big-west.png';
+import ucsdFacts from '../data/ucsdFacts.json';
 
 const BasketballGame = () => {
   const [ballPos, setBallPos] = useState({ x: 100, y: 350 });
@@ -24,7 +25,7 @@ const BasketballGame = () => {
   const PERFECT_VELOCITY_X = 6.5;    // Reduced for more controlled horizontal movement
   const PERFECT_VELOCITY_Y = -13;    // Adjusted for optimal arc
   const GRAVITY = 0.45;              // Fine-tuned gravity
-  const POWER_RATE = 0.8;           // Slower, constant power meter speed
+  const POWER_RATE = 1.6;           // Doubled from 0.8 for faster power meter movement
   const POINTS_PER_BASKET = 3;
   const BOUNCE_DAMPING = 0.8;       // Increased to preserve more vertical energy
   const GROUND_FRICTION = 0.95;     // Keep same ground friction
@@ -376,18 +377,22 @@ const BasketballGame = () => {
             setScore(s => s + POINTS_PER_BASKET);
             scoredRef.current = true;
             
-            // Set shot label based on how it went in
-            if (!hitBackboardRef.current && !hitRim) {
-              setShotLabel('SWISH!');
-            } else if (hitBackboardRef.current && !hitRim) {
-              setShotLabel('OFF THE GLASS!');
-            } else {
-              setShotLabel('SCORE!');
-            }
-            
+            // Wait a tiny bit to ensure any rim/backboard hits are registered
             setTimeout(() => {
-              setShotLabel('');
-            }, 1000);
+              // Set shot label based on how it went in, checking current collision state
+              if (!hitBackboardRef.current && !hitRim) {
+                setShotLabel('SWISH!');
+              } else if (hitBackboardRef.current && !hitRim) {
+                setShotLabel('OFF THE GLASS!');
+              } else {
+                setShotLabel('SCORE!');
+              }
+              
+              // Clear the label after showing it
+              setTimeout(() => {
+                setShotLabel('');
+              }, 1000);
+            }, 16); // One frame delay to ensure collisions are registered
           }
 
           // Debug logging
@@ -439,15 +444,22 @@ const BasketballGame = () => {
     }
   };
 
+  // Add state for the current fact
+  const [currentFact, setCurrentFact] = useState('');
+
+  // Add useEffect to set initial random fact
+  useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * ucsdFacts.facts.length);
+    setCurrentFact(ucsdFacts.facts[randomIndex]);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-white flex flex-col justify-center items-center select-none">
-      {/* NBA All-Star Logo */}
-      <img 
-        src={nbaAllStarLogo}
-        alt="NBA All-Star 2025 San Francisco Bay Area" 
-        className="w-full max-w-[400px] mb-6 px-4"
-      />
-      
+    <div className="min-h-screen bg-white flex flex-col items-center select-none">
+      {/* Title */}
+      <h1 className="text-4xl font-bold text-gray-900 mb-8 mt-8">
+        Basketball 2D 🏀
+      </h1>
+
       {/* Game Container */}
       <div 
         ref={containerRef}
@@ -468,7 +480,7 @@ const BasketballGame = () => {
           </div>
           <div className="flex flex-col items-end gap-1 sm:gap-2 select-none">
             <div className="text-xs sm:text-sm text-center">
-              {window.innerWidth <= 640 ? 'Tap and hold to shoot!' : 'Hold SPACEBAR to set power - More power = longer shot!'}
+              {window.innerWidth <= 640 ? 'Tap and hold to set power' : 'Hold SPACEBAR or tap on screen to set power'}
             </div>
             <div className="relative w-24 sm:w-32 h-4 sm:h-6 border-2 border-white bg-black">
               {/* Sweet spot range indicators */}
@@ -546,6 +558,26 @@ const BasketballGame = () => {
           </div>
         </div>
       </div>
+
+      {/* UCSD Caption and Fact */}
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-gray-900 mt-8">
+          Let's go UCSD! 🔱
+        </h2>
+        <h3 className="text-xl font-semibold text-gray-700 mt-4">
+          Did you know?
+        </h3>
+        <p className="text-xl text-gray-700 italic mt-2 max-w-[600px] px-4">
+          {currentFact}
+        </p>
+      </div>
+
+      {/* Big West Logo */}
+      <img 
+        src={bigWestLogo}
+        alt="Big West Conference"
+        className="w-full max-w-[560px] px-4 mt-auto mb-8"
+      />
     </div>
   );
 };
