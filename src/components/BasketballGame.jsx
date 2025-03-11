@@ -286,25 +286,25 @@ const BasketballGame = () => {
   }, [isMoving, time, currentVelocity, rotationSpeed]);
 
   return (
-    <div className="min-h-screen bg-white flex justify-center items-center">
+    <div className="min-h-screen bg-white flex justify-center items-center select-none">
       <div 
         ref={containerRef}
-        className="relative w-full max-w-[650px] h-[400px] sm:h-[400px] bg-gray-900 border-2 border-gray-700 touch-none"
+        className="relative w-full max-w-[650px] h-[400px] sm:h-[400px] bg-gray-900 border-2 border-gray-700 touch-none select-none"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleTouchStart}
         onMouseUp={handleTouchEnd}
-        onMouseLeave={handleTouchEnd}  // Handle mouse leaving the game area
+        onMouseLeave={handleTouchEnd}
       >
         {/* Score and Accuracy */}
-        <div className="absolute top-0 left-0 right-0 p-2 sm:p-4 flex justify-between items-start text-white">
-          <div className="flex flex-col">
-            <div className="text-xl sm:text-2xl font-bold">Score: {score}</div>
+        <div className="absolute top-0 left-0 right-0 p-2 sm:p-4 flex justify-between items-start text-white select-none">
+          <div className="flex flex-col select-none">
+            <div className="text-xl sm:text-2xl font-bold">{score}</div>
             <div className="text-lg sm:text-xl">
               {makes} / {attempts} ({attempts > 0 ? Math.round((makes/attempts) * 100) : 0}%)
             </div>
           </div>
-          <div className="flex flex-col items-end gap-1 sm:gap-2">
+          <div className="flex flex-col items-end gap-1 sm:gap-2 select-none">
             <div className="text-xs sm:text-sm text-center">
               {window.innerWidth <= 640 ? 'Tap and hold to shoot!' : 'Hold SPACEBAR to set power - More power = longer shot!'}
             </div>
@@ -322,14 +322,14 @@ const BasketballGame = () => {
 
         {/* Shot Label */}
         {shotLabel && (
-          <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl sm:text-4xl font-bold text-white z-10">
+          <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl sm:text-4xl font-bold text-white z-10 select-none">
             {shotLabel}
           </div>
         )}
 
         {/* Ball */}
         <div
-          className="absolute text-3xl sm:text-4xl transition-transform"
+          className="absolute text-3xl sm:text-4xl transition-transform select-none"
           style={{
             left: `${ballPos.x}px`,
             top: `${ballPos.y}px`,
@@ -340,7 +340,7 @@ const BasketballGame = () => {
         </div>
 
         {/* 3pt Line Indicator */}
-        <div className="absolute text-white font-bold" style={{ left: '150px', bottom: '10px' }}>
+        <div className="absolute text-white font-bold select-none" style={{ left: '150px', bottom: '10px' }}>
           |
           <br />
           3pts
@@ -350,7 +350,7 @@ const BasketballGame = () => {
         <div className="absolute bottom-0 w-full h-1 bg-gray-700" />
 
         {/* Hoop */}
-        <div className="absolute" style={{ right: '50px', top: '180px' }}>
+        <div className="absolute select-none" style={{ right: '50px', top: '180px' }}>
           <div className="relative">
             {/* Backboard */}
             <div className="absolute h-24 w-1 bg-white" 
