@@ -26,11 +26,13 @@ const BasketballGame = () => {
   const GRAVITY = 0.45;              // Fine-tuned gravity
   const POWER_RATE = 0.8;           // Slower, constant power meter speed
   const POINTS_PER_BASKET = 3;
-  const BOUNCE_DAMPING = 0.65;    // Reduced from 0.89 for less bouncy impacts
-  const GROUND_FRICTION = 0.95;   // Adjusted for smoother rolling
+  const BOUNCE_DAMPING = 0.8;       // Increased to preserve more vertical energy
+  const GROUND_FRICTION = 0.95;     // Keep same ground friction
   const MIN_SPEED = 0.2;
   const RESET_DELAY = 1500;
   const INITIAL_ROTATION_SPEED = 15;
+  const ROTATION_DAMPING = 0.85;      // Added to gradually reduce rotation
+  const MAX_ROTATION_SPEED = 20;      // Added to cap maximum rotation speed
   const BALL_RADIUS = 15;
   const RIM_WIDTH = 48;
   const RIM_Y = 180;
@@ -262,6 +264,11 @@ const BasketballGame = () => {
     return () => clearTimeout(resetTimer);
   }, [isMoving]);
 
+  // Update bounce physics constants
+  const MIN_BOUNCE_SPEED = 2;       // Increased minimum speed for bouncing
+  const BOUNCE_THRESHOLD = 350;     // Keep same ground position
+  const INITIAL_BOUNCE_BOOST = 1.1; // Slightly reduced boost factor
+
   // Ball physics with collisions
   useEffect(() => {
     let frameId;
@@ -282,19 +289,36 @@ const BasketballGame = () => {
           const RIM_FRONT = RIM_BACK - RIM_WIDTH;
           const SCORING_MARGIN = 10; // Add some margin for scoring detection
 
-          // Ground collision with bounce
-          if (newPos.y > 350) {
-            newPos.y = 350;
-            const speed = Math.sqrt(currentVelocity.x * currentVelocity.x + currentVelocity.y * currentVelocity.y);
+          // Improved ground collision with better vertical bouncing
+          if (newPos.y > BOUNCE_THRESHOLD) {
+            newPos.y = BOUNCE_THRESHOLD;
+            const verticalSpeed = Math.abs(currentVelocity.y);
             
-            if (speed < MIN_SPEED) {
-              setCurrentVelocity({ x: 0, y: 0 });
-            } else {
+            if (verticalSpeed < MIN_BOUNCE_SPEED) {
+              // Ball is moving too slowly to bounce, just roll
               setCurrentVelocity(v => ({
                 x: v.x * GROUND_FRICTION,
-                y: -v.y * BOUNCE_DAMPING
+                y: 0
               }));
-              setRotationSpeed(rs => rs * GROUND_FRICTION);
+              // Gradually reduce rotation when rolling
+              setRotationSpeed(rs => {
+                const newSpeed = rs * GROUND_FRICTION * 0.95;
+                return Math.abs(newSpeed) < 0.5 ? 0 : newSpeed;
+              });
+            } else {
+              // Enhanced bounce physics with better vertical preservation
+              const bounceVelocity = verticalSpeed * BOUNCE_DAMPING;
+              
+              setCurrentVelocity(v => ({
+                x: v.x * GROUND_FRICTION,
+                y: -bounceVelocity
+              }));
+              
+              // More realistic rotation on bounce
+              setRotationSpeed(rs => {
+                const newSpeed = rs * ROTATION_DAMPING + (Math.abs(currentVelocity.x) * 0.2);
+                return Math.min(Math.max(-MAX_ROTATION_SPEED, newSpeed), MAX_ROTATION_SPEED);
+              });
             }
           }
 
