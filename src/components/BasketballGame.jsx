@@ -199,11 +199,14 @@ const BasketballGame = () => {
   // Add state for tracking oscillation time
   const [oscillationTime, setOscillationTime] = useState(0);
 
-  // Update power meter oscillation to maintain constant speed
+  // Add state for tracking oscillation direction
+  const [powerIncreasing, setPowerIncreasing] = useState(true);
+
+  // Update power meter oscillation
   useEffect(() => {
     let powerInterval;
     let lastTime = null;
-    const targetFrameRate = 60; // 60fps
+    const targetFrameRate = 60;
     const msPerFrame = 1000 / targetFrameRate;
     
     const updatePower = (timestamp) => {
@@ -212,9 +215,17 @@ const BasketballGame = () => {
       
       if (deltaTime >= msPerFrame) {
         setPower(prev => {
-          const newPower = prev + POWER_RATE;
-          // Ensure we wrap exactly at 100
-          return newPower >= 100 ? 0 : newPower;
+          const newPower = prev + (powerIncreasing ? POWER_RATE : -POWER_RATE);
+          
+          // Change direction at bounds
+          if (newPower >= 100) {
+            setPowerIncreasing(false);
+            return 100;
+          } else if (newPower <= 0) {
+            setPowerIncreasing(true);
+            return 0;
+          }
+          return newPower;
         });
         lastTime = timestamp;
       }
@@ -228,6 +239,7 @@ const BasketballGame = () => {
       powerInterval = requestAnimationFrame(updatePower);
     } else if (!holding) {
       setPower(0);
+      setPowerIncreasing(true);  // Reset direction when released
     }
 
     return () => {
@@ -235,7 +247,7 @@ const BasketballGame = () => {
         cancelAnimationFrame(powerInterval);
       }
     };
-  }, [holding, isMoving]);
+  }, [holding, isMoving, powerIncreasing]);
 
   // Add shot timer
   useEffect(() => {
