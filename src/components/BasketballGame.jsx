@@ -400,6 +400,13 @@ const BasketballGame = () => {
               setShotLabel('SCORE! 🔱');
             }
             
+            // Check if this is the third basket
+            if (makes + 1 === 3) {
+              setTimeout(() => {
+                setShowSharePopup(true);
+              }, 500);
+            }
+            
             setTimeout(() => {
               setShotLabel('');
             }, 1000);
@@ -471,6 +478,8 @@ const BasketballGame = () => {
 
   // Add state for overlay
   const [showOverlay, setShowOverlay] = useState(true);
+  const [showSharePopup, setShowSharePopup] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   // Add auto-dismiss timer
   useEffect(() => {
@@ -524,6 +533,46 @@ const BasketballGame = () => {
         </div>
       )}
 
+      {/* Share Popup */}
+      {showSharePopup && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setShowSharePopup(false)}
+        >
+          <div 
+            className="bg-white p-8 rounded-lg flex flex-col items-center gap-6 m-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 className="text-2xl font-bold text-[#182B49] text-center">
+              Pass it on! 🏀 Share with a fellow Triton 🔱
+            </h2>
+            <button 
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                  setShowToast(true);
+                  setTimeout(() => {
+                    setShowSharePopup(false);
+                  }, 500);
+                  setTimeout(() => {
+                    setShowToast(false);
+                  }, 2000);
+                });
+              }}
+              className="bg-[#FFCD00] px-6 py-2 text-xl font-bold text-[#182B49] hover:bg-[#182B49] hover:text-[#FFCD00] transition-all border-2 border-[#182B49] hover:border-[#FFCD00]"
+            >
+              Copy Link
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-[#182B49] text-[#FFCD00] px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300">
+          Link copied! 🔱
+        </div>
+      )}
+
       {/* UCSD Logo with link */}
       <a 
         href="https://ucsdtritons.com/sports/mens-basketball"
@@ -545,7 +594,7 @@ const BasketballGame = () => {
       <div className="flex flex-col items-center gap-2 -mt-6 mb-8">
         <div className="text-center max-w-[600px] px-4">
           <span className="text-lg text-gray-700">
-            UC San Diego featured in:
+            UC San Diego featured in 📰
           </span>
           <div className="flex flex-wrap justify-center gap-x-2 mt-1">
             <a 
@@ -690,27 +739,65 @@ const BasketballGame = () => {
             </span>
           </p>
         </div>
-        <button
-          onClick={handleNewFact}
-          className="mt-2 mb-8 bg-[#182B49] px-6 py-2 text-[#FFCD00] active:bg-[#FFCD00] active:text-[#182B49] transition-all border-2 border-[#FFCD00] active:border-[#182B49] text-lg font-semibold"
-        >
-          Give me another fact! 🏀
-        </button>
+        <div className="flex justify-center gap-4 mb-8">
+          <button
+            onClick={handleNewFact}
+            className="bg-[#182B49] px-6 py-2 text-[#FFCD00] active:bg-[#FFCD00] active:text-[#182B49] transition-all border-2 border-[#FFCD00] active:border-[#182B49] text-lg font-semibold"
+          >
+            Give me another fact! 🏀
+          </button>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.href).then(() => {
+                setShowToast(true);
+                setTimeout(() => {
+                  setShowSharePopup(false);
+                }, 500);
+                setTimeout(() => {
+                  setShowToast(false);
+                }, 2000);
+              });
+            }}
+            className="bg-[#182B49] px-6 py-2 text-[#FFCD00] active:bg-[#FFCD00] active:text-[#182B49] transition-all border-2 border-[#FFCD00] active:border-[#182B49] text-lg font-semibold"
+          >
+            Share with a Triton 🔱
+          </button>
+        </div>
       </div>
 
-      {/* Big West Logo as clickable link */}
-      <a 
-        href="https://bigwest.org/tournaments/?id=121"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-auto mb-8 border-b-4 border-transparent hover:border-[#FFCD00] transition-colors"
-      >
-        <img 
-          src={bigWestLogo}
-          alt="Big West Conference"
-          className="w-full max-w-[450px] px-4"
-        />
-      </a>
+      {/* Big West Logo and Upcoming Games Container */}
+      <div className="mt-auto mb-8 w-full max-w-[900px] flex flex-col sm:flex-row items-stretch justify-center px-8">
+        {/* Big West Logo */}
+        <a 
+          href="https://bigwest.org/tournaments/?id=121"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="border-b-4 border-transparent hover:border-[#FFCD00] transition-colors flex-1"
+        >
+          <img 
+            src={bigWestLogo}
+            alt="Big West Conference"
+            className="w-full h-full object-contain"
+          />
+        </a>
+
+        {/* Upcoming Games */}
+        <div className="flex flex-col justify-center bg-slate-100 flex-1">
+          <div className="px-8">
+            <h3 className="text-2xl font-bold text-[#182B49] mb-4">Upcoming Games</h3>
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-col">
+                <span className="text-lg font-semibold">March 14</span>
+                <span className="text-lg">6:00 PM PT, ESPNU</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-lg font-semibold">March 15</span>
+                <span className="text-lg">6:30 PM PT, ESPN2</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
