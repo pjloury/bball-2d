@@ -5,7 +5,7 @@ import ucsdLogo from '../assets/ucsandiego.png';
 import nextStopLogo from '../assets/next-stop.png';
 
 const BasketballGame = () => {
-  const [ballPos, setBallPos] = useState({ x: 100, y: 350 });
+  const [ballPos, setBallPos] = useState({ x: window.innerWidth <= 640 ? 60 : 100, y: 350 });
   const [isMoving, setIsMoving] = useState(false);
   const [time, setTime] = useState(0);
   const [score, setScore] = useState(0);
@@ -79,7 +79,11 @@ const BasketballGame = () => {
     
     // Calculate required velocities using projectile motion equations
     const velocityX = dx / timeToTarget;
-    const velocityY = (dy - (0.5 * GRAVITY * timeToTarget * timeToTarget)) / timeToTarget;
+    
+    // Adjust vertical velocity for mobile screens
+    const isMobile = window.innerWidth <= 640;
+    const mobileAdjustment = isMobile ? 1.15 : 1.0; // Increase upward velocity by 15% on mobile
+    const velocityY = (dy - (0.5 * GRAVITY * timeToTarget * timeToTarget)) / timeToTarget * mobileAdjustment;
     
     return { velocityX, velocityY };
   };
@@ -90,40 +94,67 @@ const BasketballGame = () => {
     
     const sweetSpotCenter = (SWEET_SPOT_MIN + SWEET_SPOT_MAX) / 2;
     const distanceFromPerfect = Math.abs(powerValue - sweetSpotCenter);
+    const isMobile = window.innerWidth <= 640;
     
-    let velocityModifier;
-    if (powerValue >= SWEET_SPOT_MIN && powerValue <= SWEET_SPOT_MAX) {
-      // In sweet spot - very high chance of making it
-      const sweetSpotProgress = distanceFromPerfect / (SWEET_SPOT_MAX - sweetSpotCenter);
-      const randomVariation = (Math.random() * 2 - 1) * 0.02; // Even smaller variation for more consistent makes
-      velocityModifier = 1 + (randomVariation * sweetSpotProgress);
-    } else {
-      // Outside sweet spot - still possible to make it but gets harder the further out you go
-      const powerDiff = powerValue - sweetSpotCenter;
-      const missScale = Math.abs(powerDiff) / 50; // How far from sweet spot
-      
-      if (powerValue < SWEET_SPOT_MIN) {
-        // Short shots - slightly reduced velocities with some randomness
-        const shortRandomness = Math.random() * 0.1; // Add some randomness
-        return {
-          x: velocityX * (0.95 - missScale * 0.05 + shortRandomness),
-          y: velocityY * (0.95 - missScale * 0.05 + shortRandomness)
-        };
+    if (isMobile) {
+      // Mobile-specific logic with more challenging shots
+      let velocityModifier;
+      if (powerValue >= SWEET_SPOT_MIN && powerValue <= SWEET_SPOT_MAX) {
+        const sweetSpotProgress = distanceFromPerfect / (SWEET_SPOT_MAX - sweetSpotCenter);
+        const randomVariation = (Math.random() * 2 - 1) * 0.05;
+        velocityModifier = 1 + (randomVariation * sweetSpotProgress);
       } else {
-        // Long shots - slightly increased velocities with some randomness
-        const longRandomness = Math.random() * 0.1; // Add some randomness
-        return {
-          x: velocityX * (1.05 + missScale * 0.05 + longRandomness),
-          y: velocityY * (1.05 + missScale * 0.05 + longRandomness)
-        };
+        const powerDiff = powerValue - sweetSpotCenter;
+        const missScale = Math.abs(powerDiff) / 50;
+        
+        if (powerValue < SWEET_SPOT_MIN) {
+          const shortRandomness = Math.random() * 0.1;
+          return {
+            x: velocityX * (0.85 - missScale * 0.15 + shortRandomness),
+            y: velocityY * (0.85 - missScale * 0.15 + shortRandomness)
+          };
+        } else {
+          const longRandomness = Math.random() * 0.1;
+          return {
+            x: velocityX * (1.15 + missScale * 0.15 + longRandomness),
+            y: velocityY * (1.15 + missScale * 0.15 + longRandomness)
+          };
+        }
       }
+      return {
+        x: velocityX * velocityModifier,
+        y: velocityY * velocityModifier
+      };
+    } else {
+      // Desktop-specific logic with more forgiving shots
+      let velocityModifier;
+      if (powerValue >= SWEET_SPOT_MIN && powerValue <= SWEET_SPOT_MAX) {
+        const sweetSpotProgress = distanceFromPerfect / (SWEET_SPOT_MAX - sweetSpotCenter);
+        const randomVariation = (Math.random() * 2 - 1) * 0.02;
+        velocityModifier = 1 + (randomVariation * sweetSpotProgress);
+      } else {
+        const powerDiff = powerValue - sweetSpotCenter;
+        const missScale = Math.abs(powerDiff) / 50;
+        
+        if (powerValue < SWEET_SPOT_MIN) {
+          const shortRandomness = Math.random() * 0.05;
+          return {
+            x: velocityX * (0.95 - missScale * 0.05 + shortRandomness),
+            y: velocityY * (0.95 - missScale * 0.05 + shortRandomness)
+          };
+        } else {
+          const longRandomness = Math.random() * 0.05;
+          return {
+            x: velocityX * (1.05 + missScale * 0.05 + longRandomness),
+            y: velocityY * (1.05 + missScale * 0.05 + longRandomness)
+          };
+        }
+      }
+      return {
+        x: velocityX * velocityModifier,
+        y: velocityY * velocityModifier
+      };
     }
-
-    // Sweet spot shots
-    return {
-      x: velocityX * velocityModifier,
-      y: velocityY * velocityModifier
-    };
   };
 
   // Update viewport scaling helper
@@ -573,25 +604,11 @@ const BasketballGame = () => {
         </div>
       )}
 
-      {/* UCSD Logo with link */}
-      <a 
-        href="https://ucsdtritons.com/sports/mens-basketball"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-8 mb-2 border-b-4 border-transparent hover:border-[#FFCD00] transition-colors"
-      >
-        <img 
-          src={ucsdLogo}
-          alt="UC San Diego"
-          className="w-full max-w-[200px] px-4"
-        />
-      </a>
-
       {/* Title with UCSD colors */}
-      <h1 className="text-4xl font-bold text-[#182B49] mb-8 mt-4">
+      <h1 className="text-2xl sm:text-4xl font-bold text-[#182B49] mb-4 sm:mb-8 mt-2 sm:mt-4">
         Let's go Tritons! 🔱
       </h1>
-      <div className="flex flex-col items-center gap-2 -mt-6 mb-8">
+      <div className="flex flex-col items-center gap-2 -mt-2 sm:-mt-6 mb-4 sm:mb-8">
         <div className="text-center max-w-[600px] px-4">
           <span className="text-lg text-gray-700">
             UC San Diego featured in 📰
@@ -621,7 +638,7 @@ const BasketballGame = () => {
       {/* Game Container with navy border */}
       <div 
         ref={containerRef}
-        className="relative w-full max-w-[650px] h-[400px] sm:h-[400px] bg-gray-900 border-2 border-[#182B49] touch-none select-none"
+        className="relative w-full max-w-[650px] h-[400px] bg-gray-900 border-2 border-[#182B49] touch-none select-none"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleTouchStart}
@@ -631,8 +648,8 @@ const BasketballGame = () => {
         {/* Score display with mixed colors */}
         <div className="absolute top-0 left-0 right-0 p-2 sm:p-4 flex justify-between items-start select-none">
           <div className="flex flex-col select-none">
-            <div className="text-xl sm:text-2xl font-bold text-[#FFCD00]">{score}</div>
-            <div className="text-lg sm:text-xl text-white">
+            <div className="text-lg sm:text-2xl font-bold text-[#FFCD00]">{score}</div>
+            <div className="text-base sm:text-xl text-white">
               {makes} / {attempts} ({attempts > 0 ? Math.round((makes/attempts) * 100) : 0}%)
             </div>
           </div>
@@ -693,7 +710,7 @@ const BasketballGame = () => {
         </div>
 
         {/* 3pt Line Indicator */}
-        <div className="absolute text-white font-bold select-none" style={{ left: '150px', bottom: '10px' }}>
+        <div className="absolute text-white font-bold select-none" style={{ left: window.innerWidth <= 640 ? '120px' : '160px', bottom: '10px' }}>
           |
           <br />
           3pts
@@ -726,11 +743,11 @@ const BasketballGame = () => {
 
       {/* UCSD Caption and Fact */}
       <div className="text-center">
-        <h2 className="text-2xl font-semibold text-[#182B49] mt-4">
+        <h2 className="text-xl sm:text-2xl font-semibold text-[#182B49] mt-4">
           Did you know?
         </h2>
         <div className="h-[100px] flex items-center justify-center mb-2">
-          <p className={`text-xl text-[#182B49] transition-opacity duration-300 px-12 max-w-[600px] ${fadeOut ? 'opacity-0' : 'opacity-100'}`}>
+          <p className={`text-base sm:text-xl text-[#182B49] transition-opacity duration-300 px-12 max-w-[600px] ${fadeOut ? 'opacity-0' : 'opacity-100'}`}>
             <span className="italic">
               {currentFact.slice(0, currentFact.lastIndexOf(' '))}
             </span>
@@ -739,7 +756,7 @@ const BasketballGame = () => {
             </span>
           </p>
         </div>
-        <div className="flex justify-center gap-4 mb-8">
+        <div className="flex justify-center gap-4 mb-8 px-4">
           <button
             onClick={handleNewFact}
             className="bg-[#182B49] px-6 py-2 text-[#FFCD00] active:bg-[#FFCD00] active:text-[#182B49] transition-all border-2 border-[#FFCD00] active:border-[#182B49] text-lg font-semibold"
@@ -797,6 +814,22 @@ const BasketballGame = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Move UCSD Logo to bottom */}
+      <div className="mt-auto order-last">
+        <a 
+          href="https://ucsdtritons.com/sports/mens-basketball"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-8 mb-4 border-b-4 border-transparent hover:border-[#FFCD00] transition-colors block"
+        >
+          <img 
+            src={ucsdLogo}
+            alt="UC San Diego"
+            className="w-full max-w-[200px] px-4"
+          />
+        </a>
       </div>
     </div>
   );
