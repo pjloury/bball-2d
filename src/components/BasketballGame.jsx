@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import bigWestLogo from '../assets/big-west.png';
 import ucsdFacts from '../data/ucsdFacts.json';
 import ucsdLogo from '../assets/ucsandiego.png';
+import championshipRound from '../assets/championship-round.jpg';
 import nextStopLogo from '../assets/next-stop.png';
 
 const BasketballGame = () => {
@@ -550,15 +551,15 @@ const BasketballGame = () => {
             onClick={e => e.stopPropagation()}
           >
             <img 
-              src={nextStopLogo}
-              alt="Next Stop"
-              className="w-full max-w-[650px] max-h-[70vh] px-4 object-contain"
+              src={championshipRound}
+              alt="Big West Championship Finals"
+              className="w-full max-w-[800px] max-h-[80vh] px-4 object-contain bg-black rounded-lg"
             />
             <button 
               onClick={() => setShowOverlay(false)}
               className="bg-[#FFCD00] px-6 py-2 text-xl font-bold text-[#182B49] hover:bg-[#182B49] hover:text-[#FFCD00] transition-all border-2 border-[#182B49] hover:border-[#FFCD00]"
             >
-              Let's Go!
+              Let's Play! 🏀
             </button>
           </div>
         </div>
@@ -789,27 +790,29 @@ const BasketballGame = () => {
           href="https://bigwest.org/tournaments/?id=121"
           target="_blank"
           rel="noopener noreferrer"
-          className="border-b-4 border-transparent hover:border-[#FFCD00] transition-colors flex-1"
+          className="border-b-4 border-transparent hover:border-[#FFCD00] transition-colors flex-1 flex items-start"
         >
           <img 
             src={bigWestLogo}
             alt="Big West Conference"
-            className="w-full h-full object-contain"
+            className="w-full object-contain"
           />
         </a>
 
         {/* Upcoming Games */}
-        <div className="flex flex-col justify-center bg-slate-100 flex-1">
+        <div className="flex flex-col flex-1">
           <div className="px-8">
-            <h3 className="text-2xl font-bold text-[#182B49] mb-4">Upcoming Games</h3>
-            <div className="flex flex-col gap-2">
-              <div className="flex flex-col">
-                <span className="text-lg font-semibold">March 14</span>
-                <span className="text-lg">6:00 PM PT, ESPNU</span>
+            <div className="flex flex-col gap-4">
+              <h4 className="text-3xl font-bold text-[#F4B223] tracking-wide">March 15</h4>
+              <div className="flex flex-col gap-1">
+                <span className="text-xl font-bold text-[#182B49]">Women's Championship</span>
+                <span className="text-lg text-gray-600 italic">vs. UC Davis</span>
+                <span className="text-base font-medium text-[#182B49]">3 PM PT, <span className="text-[#00A3E0]">ESPN+</span></span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-lg font-semibold">March 15</span>
-                <span className="text-lg">6:30 PM PT, ESPN2</span>
+              <div className="flex flex-col gap-1">
+                <span className="text-xl font-bold text-[#182B49]">Men's Championship</span>
+                <span className="text-lg text-gray-600 italic">vs. UC Irvine</span>
+                <span className="text-base font-medium text-[#182B49]">6:40 PM PT, <span className="text-red-600">ESPN2</span></span>
               </div>
             </div>
           </div>
