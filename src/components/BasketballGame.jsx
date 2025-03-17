@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import bigWestLogo from '../assets/big-west.png';
 import ucsdFacts from '../data/ucsdFacts.json';
 import ucsdLogo from '../assets/ucsandiego.png';
-import championshipRound from '../assets/championship-round.jpg';
+import bwChamps from '../assets/bw-champs.webp';
 import nextStopLogo from '../assets/next-stop.png';
+import marchMadnessLogo from '../assets/march-madness.png';
 
 const BasketballGame = () => {
   const [ballPos, setBallPos] = useState({ x: window.innerWidth <= 640 ? 60 : 100, y: 350 });
@@ -547,14 +548,16 @@ const BasketballGame = () => {
           onClick={() => setShowOverlay(false)}
         >
           <div 
-            className="bg-white p-8 rounded-lg flex flex-col items-center gap-6 m-4"
+            className="bg-white p-2 sm:p-8 rounded-lg flex flex-col items-center gap-4 sm:gap-6 m-2 sm:m-4 w-[95%] sm:w-auto"
             onClick={e => e.stopPropagation()}
           >
-            <img 
-              src={championshipRound}
-              alt="Big West Championship Finals"
-              className="w-full max-w-[800px] max-h-[80vh] px-4 object-contain bg-black rounded-lg"
-            />
+            <div className="w-full bg-black rounded-lg">
+              <img 
+                src={bwChamps}
+                alt="Big West Championship Finals"
+                className="w-full h-auto object-contain max-h-[80vh]"
+              />
+            </div>
             <button 
               onClick={() => setShowOverlay(false)}
               className="bg-[#FFCD00] px-6 py-2 text-xl font-bold text-[#182B49] hover:bg-[#182B49] hover:text-[#FFCD00] transition-all border-2 border-[#182B49] hover:border-[#FFCD00]"
@@ -605,36 +608,35 @@ const BasketballGame = () => {
         </div>
       )}
 
-      {/* Title with UCSD colors */}
-      <h1 className="text-2xl sm:text-4xl font-bold text-[#182B49] mb-4 sm:mb-8 mt-2 sm:mt-4">
-        Let's go Tritons! 🔱
+           {/* Title with UCSD colors */}
+      <h1 className="text-2xl sm:text-4xl font-bold text-[#182B49] mb-2 sm:mb-8 mt-2 sm:mt-4">
+        UCSD's first March Madness! 🔱
       </h1>
-      <div className="flex flex-col items-center gap-2 -mt-2 sm:-mt-6 mb-4 sm:mb-8">
-        <div className="text-center max-w-[600px] px-4">
-          <span className="text-lg text-gray-700">
-            UC San Diego featured in 📰
-          </span>
-          <div className="flex flex-wrap justify-center gap-x-2 mt-1">
-            <a 
-              href="https://www.cbssports.com/college-basketball/news/finally-eligible-for-march-madness-division-is-most-unlikely-success-story-out-to-prove-its-not-done-yet/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-lg text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              CBS Sports
-            </a>
-            <span className="text-lg text-gray-700">|</span>
-            <a 
-              href="https://www.nytimes.com/athletic/6192140/2025/03/11/uc-san-diego-ncaa-tournament-eric-olen/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-lg text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              NY Times
-            </a>
-          </div>
-        </div>
+
+      {/* Championship Links */}
+      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 mt-1 sm:mt-2 mb-6">
+        <a 
+          href="https://ucsdtritons.com/news/2025/3/15/womens-basketball-champions-tritons-earn-first-big-west-tournament-crown.aspx"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-lg font-bold text-[#182B49] hover:text-[#FFCD00] transition-colors text-center"
+        >
+          <div>Big West Women's Champions 🏆</div>
+          <div className="text-base font-medium text-gray-600">UCSD 75, UC Davis 66</div>
+        </a>
+        <span className="hidden sm:inline text-[#182B49]">|</span>
+        <a 
+          href="https://ucsdtritons.com/news/2025/3/15/mens-basketball-tritons-down-irvine-to-win-first-big-west-championship.aspx"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-lg font-bold text-[#182B49] hover:text-[#FFCD00] transition-colors text-center"
+        >
+          <div>Big West Men's Champions 🏆</div>
+          <div className="text-base font-medium text-gray-600">UCSD 75, UC Irvine 61</div>
+        </a>
       </div>
+
+ 
 
       {/* Game Container with navy border */}
       <div 
@@ -785,47 +787,72 @@ const BasketballGame = () => {
 
       {/* Big West Logo and Upcoming Games Container */}
       <div className="mt-auto mb-8 w-full max-w-[900px] flex flex-col sm:flex-row items-stretch justify-center px-8">
-        {/* Big West Logo */}
+        {/* March Madness Logo */}
         <a 
-          href="https://bigwest.org/tournaments/?id=121"
+          href="https://www.ncaa.com/news/basketball-men/article/2025-03-16/2025-march-madness-mens-ncaa-tournament-schedule-dates"
           target="_blank"
           rel="noopener noreferrer"
-          className="border-b-4 border-transparent hover:border-[#FFCD00] transition-colors flex-1 flex items-start"
+          className="border-b-4 border-transparent hover:border-[#FFCD00] transition-colors sm:w-[37.5%] flex items-start"
         >
           <img 
-            src={bigWestLogo}
-            alt="Big West Conference"
+            src={marchMadnessLogo}
+            alt="March Madness"
             className="w-full object-contain"
           />
         </a>
 
         {/* Upcoming Games */}
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-col sm:w-[62.5%]">
           <div className="px-8">
             <div className="flex flex-col gap-4">
-              <h4 className="text-3xl font-bold text-[#F4B223] tracking-wide">March 15</h4>
+              <h4 className="text-3xl font-bold text-[#182B49] tracking-wide">March 19</h4>
               <div className="flex flex-col gap-1">
-                <span className="text-xl font-bold text-[#182B49]">Women's Championship</span>
-                <span className="text-lg text-gray-600 italic">vs. UC Davis</span>
-                <span className="text-base font-medium text-[#182B49]">3 PM PT, <span className="text-[#00A3E0]">ESPN+</span></span>
+                <span className="text-xl font-bold text-[#182B49]">Women's First Four</span>
+                <span className="text-lg text-gray-600">#16 UCSD vs. #16 Southern University</span>
+                <span className="text-base font-medium text-[#182B49]">TBD, <span className="text-[#00A3E0]">ESPN+</span></span>
               </div>
+              <h4 className="text-3xl font-bold text-[#182B49] tracking-wide">March 20</h4>
               <div className="flex flex-col gap-1">
-                <span className="text-xl font-bold text-[#182B49]">Men's Championship</span>
-                <span className="text-lg text-gray-600 italic">vs. UC Irvine</span>
-                <span className="text-base font-medium text-[#182B49]">6:40 PM PT, <span className="text-red-600">ESPN2</span></span>
+                <span className="text-xl font-bold text-[#182B49]">Men's First Round</span>
+                <span className="text-lg text-gray-600">#12 UCSD vs. #5 Michigan</span>
+                <span className="text-base font-medium text-[#182B49]">7 PM PT, <span className="text-red-600">TBS</span></span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Move UCSD Logo to bottom */}
-      <div className="mt-auto order-last">
+      {/* News Links and UCSD Logo */}
+      <div className="mt-8 flex flex-col items-center">
+        <div className="text-center max-w-[600px] px-4 mb-4">
+          <span className="text-lg text-gray-700">
+            UC San Diego featured in 📰
+          </span>
+          <div className="flex flex-wrap justify-center gap-x-2 mt-1">
+            <a 
+              href="https://www.cbssports.com/college-basketball/news/finally-eligible-for-march-madness-division-is-most-unlikely-success-story-out-to-prove-its-not-done-yet/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-lg text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              CBS Sports
+            </a>
+            <span className="text-lg text-gray-700">|</span>
+            <a 
+              href="https://www.nytimes.com/athletic/6192140/2025/03/11/uc-san-diego-ncaa-tournament-eric-olen/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-lg text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              NY Times
+            </a>
+          </div>
+        </div>
         <a 
           href="https://ucsdtritons.com/sports/mens-basketball"
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-8 mb-4 border-b-4 border-transparent hover:border-[#FFCD00] transition-colors block"
+          className="mt-4 mb-4 border-b-4 border-transparent hover:border-[#FFCD00] transition-colors block"
         >
           <img 
             src={ucsdLogo}
