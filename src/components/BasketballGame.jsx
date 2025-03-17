@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import bigWestLogo from '../assets/big-west.png';
 import ucsdFacts from '../data/ucsdFacts.json';
 import ucsdLogo from '../assets/ucsandiego.png';
-import bwChamps from '../assets/bw-champs.webp';
+import firstRound from '../assets/first-round.jpg';
 import nextStopLogo from '../assets/next-stop.png';
 import marchMadnessLogo from '../assets/march-madness.png';
 
@@ -553,8 +553,8 @@ const BasketballGame = () => {
           >
             <div className="w-full bg-black rounded-lg">
               <img 
-                src={bwChamps}
-                alt="Big West Championship Finals"
+                src={firstRound}
+                alt="UCSD March Madness Round 1 Matchups"
                 className="w-full h-auto object-contain max-h-[80vh]"
               />
             </div>
