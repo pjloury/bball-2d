@@ -809,7 +809,7 @@ const BasketballGame = () => {
               <div className="flex flex-col gap-1">
                 <span className="text-xl font-bold text-[#182B49]">Women's First Four</span>
                 <span className="text-lg text-gray-600">#16 UCSD vs. #16 Southern University</span>
-                <span className="text-base font-medium text-[#182B49]">TBD, <span className="text-[#00A3E0]">ESPN+</span></span>
+                <span className="text-base font-medium text-[#182B49]">6 PM PT, <span className="text-[#00A3E0]">ESPN+</span></span>
               </div>
               <h4 className="text-3xl font-bold text-[#182B49] tracking-wide">March 20</h4>
               <div className="flex flex-col gap-1">
