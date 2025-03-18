@@ -846,6 +846,15 @@ const BasketballGame = () => {
             >
               NY Times
             </a>
+            <span className="text-lg text-gray-700">|</span>
+            <a 
+              href="https://www.wsj.com/sports/basketball/march-madness-2025-ncaa-tournament-upset-picks-4c31c061"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-lg text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              WSJ Sports
+            </a>
           </div>
         </div>
         <a 
