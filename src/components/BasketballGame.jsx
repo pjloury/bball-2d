@@ -5,6 +5,7 @@ import ucsdLogo from '../assets/ucsandiego.png';
 import firstRound from '../assets/first-round.jpg';
 import nextStopLogo from '../assets/next-stop.png';
 import marchMadnessLogo from '../assets/march-madness.png';
+import { isFeatureEnabled } from '../config/featureFlags';
 
 const BasketballGame = () => {
   const [ballPos, setBallPos] = useState({ x: window.innerWidth <= 640 ? 60 : 100, y: 350 });
@@ -434,7 +435,7 @@ const BasketballGame = () => {
             }
             
             // Check if this is the third basket
-            if (makes + 1 === 3) {
+            if (makes + 1 === 3 && isFeatureEnabled('SHOW_SHARE_GAME_POPUP')) {
               setTimeout(() => {
                 setShowSharePopup(true);
               }, 500);
@@ -510,13 +511,13 @@ const BasketballGame = () => {
   };
 
   // Add state for overlay
-  const [showOverlay, setShowOverlay] = useState(true);
+  const [showOverlay, setShowOverlay] = useState(isFeatureEnabled('SHOW_FIRST_ROUND_POPUP'));
   const [showSharePopup, setShowSharePopup] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
   // Add auto-dismiss timer
   useEffect(() => {
-    if (showOverlay) {
+    if (showOverlay && isFeatureEnabled('SHOW_FIRST_ROUND_POPUP')) {
       const timer = setTimeout(() => {
         setShowOverlay(false);
       }, 4000);  // 4 seconds
@@ -542,7 +543,7 @@ const BasketballGame = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center select-none">
       {/* Overlay */}
-      {showOverlay && (
+      {showOverlay && isFeatureEnabled('SHOW_FIRST_ROUND_POPUP') && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
           onClick={() => setShowOverlay(false)}
@@ -569,7 +570,7 @@ const BasketballGame = () => {
       )}
 
       {/* Share Popup */}
-      {showSharePopup && (
+      {showSharePopup && isFeatureEnabled('SHOW_SHARE_GAME_POPUP') && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
           onClick={() => setShowSharePopup(false)}
